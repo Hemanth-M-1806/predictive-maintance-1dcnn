@@ -1,0 +1,15 @@
+# Python environment & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+
+# Datasets & Large Models (Keep folders, ignore raw binary outputs if large)
+models/*.h5
+models/*.pkl
+
+# OS specific files
+.DS_Store
+Thumbs.db
