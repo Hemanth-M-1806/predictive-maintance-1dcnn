@@ -2,12 +2,14 @@ import os
 import sys
 import subprocess
 
-# Menu Options Mapping
 MODULE_MAP = {
     "1": ("Healthy State", "collect_healthy.py"),
     "2": ("Misalignment Fault (Broken Case 1)", "collect_misalignment.py"),
     "3": ("Imbalance Fault (Broken Case 2)", "collect_imbalance.py"),
 }
+
+# Resolve the absolute path of the directory containing this script
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def display_menu():
@@ -33,9 +35,11 @@ def main():
 
         if choice in MODULE_MAP:
             class_name, script_name = MODULE_MAP[choice]
+            # Construct absolute path to the target script
+            script_path = os.path.join(BASE_DIR, script_name)
 
-            if not os.path.exists(script_name):
-                print(f"\n[!] Error: Script '{script_name}' not found in current directory.")
+            if not os.path.exists(script_path):
+                print(f"\n[!] Error: Script '{script_name}' not found at {script_path}")
                 input("Press Enter to return to main menu...")
                 continue
 
@@ -44,7 +48,8 @@ def main():
             print("=" * 60 + "\n")
 
             try:
-                subprocess.run([sys.executable, script_name], check=True)
+                # Pass cwd=BASE_DIR so the subprocess runs inside the target directory
+                subprocess.run([sys.executable, script_path], check=True, cwd=BASE_DIR)
             except subprocess.CalledProcessError:
                 print(f"\n[!] Session in '{script_name}' ended with an error.")
             except KeyboardInterrupt:
