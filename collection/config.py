@@ -8,7 +8,7 @@ BAUD_RATE = 115200
 BASE_DATASET_DIR = "datasets"
 WINDOW_SIZE = 256  # 256 samples per frame (~2.5s @ 100Hz)
 STEP_SIZE = 128  # 50% overlap step size
-TARGET_SEGMENTS = 5  # Increase (e.g. 100-300) for full dataset generation
+TARGET_SEGMENTS = 150  # Increase (e.g. 100-300) for full dataset generation
 
 # Speed / Voltage Profiles
 CONDITION_MAP = {
