@@ -12,12 +12,24 @@ def record_dataset():
 
     condition_name = config.prompt_condition_selection()
 
-    target_dir = os.path.join(config.BASE_DATASET_DIR, folder_name)
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    dataset_dir = os.path.join(base_dir, "datasets")
+
+    target_dir = os.path.join(dataset_dir, folder_name)
     os.makedirs(target_dir, exist_ok=True)
-    segmented_filename = os.path.join(target_dir, f"{condition_name}.csv")
+
+    segmented_filename = os.path.join(
+        target_dir,
+        f"{condition_name}.csv"
+    )
 
     try:
-        ser = serial.Serial(config.SERIAL_PORT, config.BAUD_RATE, timeout=1)
+        ser = serial.Serial(
+            config.SERIAL_PORT,
+            config.BAUD_RATE,
+            timeout=1
+        )
+
         time.sleep(2)
         ser.reset_input_buffer()
 
@@ -26,14 +38,33 @@ def record_dataset():
         print(f"[+] Output: {os.path.abspath(segmented_filename)}")
         print("-" * 65)
 
-        with open(segmented_filename, mode="a", newline="", encoding="utf-8") as win_file:
+        with open(
+            segmented_filename,
+            mode="a",
+            newline="",
+            encoding="utf-8"
+        ) as win_file:
+
             win_writer = csv.writer(win_file)
 
             if win_file.tell() == 0:
-                headers = [f"X_{i}" for i in range(config.WINDOW_SIZE)]
-                headers += [f"Y_{i}" for i in range(config.WINDOW_SIZE)]
-                headers += [f"Z_{i}" for i in range(config.WINDOW_SIZE)]
+                headers = [
+                    f"X_{i}"
+                    for i in range(config.WINDOW_SIZE)
+                ]
+
+                headers += [
+                    f"Y_{i}"
+                    for i in range(config.WINDOW_SIZE)
+                ]
+
+                headers += [
+                    f"Z_{i}"
+                    for i in range(config.WINDOW_SIZE)
+                ]
+
                 headers.append("Label")
+
                 win_writer.writerow(headers)
 
             buffer = []
@@ -41,9 +72,15 @@ def record_dataset():
             windows_saved = 0
 
             while windows_saved < config.TARGET_SEGMENTS:
-                line = ser.readline().decode("utf-8", errors="ignore").strip()
+
+                line = ser.readline().decode(
+                    "utf-8",
+                    errors="ignore"
+                ).strip()
+
                 if line:
                     parts = line.split(",")
+
                     if len(parts) == 3:
                         try:
                             accel_x, accel_y, accel_z = (
@@ -51,30 +88,60 @@ def record_dataset():
                                 float(parts[1]),
                                 float(parts[2]),
                             )
-                            buffer.append((accel_x, accel_y, accel_z))
+
+                            buffer.append(
+                                (accel_x, accel_y, accel_z)
+                            )
+
                             total_samples += 1
 
                             if len(buffer) == config.WINDOW_SIZE:
-                                xs = [b[0] for b in buffer]
-                                ys = [b[1] for b in buffer]
-                                zs = [b[2] for b in buffer]
 
-                                win_writer.writerow(xs + ys + zs + [class_id])
+                                xs = [
+                                    b[0]
+                                    for b in buffer
+                                ]
+
+                                ys = [
+                                    b[1]
+                                    for b in buffer
+                                ]
+
+                                zs = [
+                                    b[2]
+                                    for b in buffer
+                                ]
+
+                                win_writer.writerow(
+                                    xs + ys + zs + [class_id]
+                                )
+
                                 win_file.flush()
 
                                 windows_saved += 1
+
                                 print(
-                                    f"[{time.strftime('%H:%M:%S')}] Saved Segment "
-                                    f"{windows_saved}/{config.TARGET_SEGMENTS}"
+                                    f"[{time.strftime('%H:%M:%S')}] "
+                                    f"Saved Segment "
+                                    f"{windows_saved}/"
+                                    f"{config.TARGET_SEGMENTS}"
                                 )
-                                buffer = buffer[config.STEP_SIZE :]
+
+                                buffer = buffer[
+                                    config.STEP_SIZE:
+                                ]
+
                         except ValueError:
                             continue
 
-            print(f"\n[✔] {config.TARGET_SEGMENTS} segments saved to '{segmented_filename}'.")
+            print(
+                f"\n[✔] {config.TARGET_SEGMENTS} segments "
+                f"saved to '{segmented_filename}'."
+            )
 
     except serial.SerialException as e:
         print(f"\n[!] Serial Error: {e}")
+
     finally:
         if "ser" in locals() and ser.is_open:
             ser.close()
