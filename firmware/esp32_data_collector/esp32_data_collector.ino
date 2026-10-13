@@ -11,74 +11,59 @@ Adafruit_MPU6050 mpu;
 #define IN4 26
 #define ENB 14
 
-#define PWM_FREQ 1000
-#define PWM_RESOLUTION 8
-
-#define MOTOR_SPEED 180
-#define SAMPLE_INTERVAL_US 10000
-
-void motorForward(int speed)
-{
-  digitalWrite(IN3, HIGH);
-  digitalWrite(IN4, LOW);
-  ledcWrite(ENB, speed);
-}
-
-void motorStop()
-{
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, LOW);
-  ledcWrite(ENB, 0);
-}
-
 void setup()
 {
   Serial.begin(115200);
+  delay(1000);
 
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
+  pinMode(ENB, OUTPUT);
 
-  ledcAttach(ENB, PWM_FREQ, PWM_RESOLUTION);
-
-  motorStop();
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+  digitalWrite(ENB, HIGH);
 
   Wire.begin(SDA_PIN, SCL_PIN);
+  Wire.setClock(100000);
 
   if (!mpu.begin())
   {
+    Serial.println("MPU6050 NOT FOUND");
     while (1)
     {
       delay(1000);
     }
   }
 
+  Serial.println("MPU6050 FOUND");
+
   mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
   mpu.setGyroRange(MPU6050_RANGE_500_DEG);
   mpu.setFilterBandwidth(MPU6050_BAND_44_HZ);
 
   delay(1000);
-
-  motorForward(MOTOR_SPEED);
 }
 
 void loop()
 {
-  static unsigned long lastSample = 0;
+  sensors_event_t acceleration;
+  sensors_event_t gyro;
+  sensors_event_t temperature;
 
-  if (micros() - lastSample >= SAMPLE_INTERVAL_US)
-  {
-    lastSample += SAMPLE_INTERVAL_US;
+  mpu.getEvent(
+    &acceleration,
+    &gyro,
+    &temperature
+  );
 
-    sensors_event_t acceleration;
-    sensors_event_t gyro;
-    sensors_event_t temperature;
+  Serial.print(acceleration.acceleration.x, 6);
+  Serial.print(",");
 
-    mpu.getEvent(&acceleration, &gyro, &temperature);
+  Serial.print(acceleration.acceleration.y, 6);
+  Serial.print(",");
 
-    Serial.print(acceleration.acceleration.x, 6);
-    Serial.print(",");
-    Serial.print(acceleration.acceleration.y, 6);
-    Serial.print(",");
-    Serial.println(acceleration.acceleration.z, 6);
-  }
+  Serial.println(acceleration.acceleration.z, 6);
+
+  delay(20);
 }
